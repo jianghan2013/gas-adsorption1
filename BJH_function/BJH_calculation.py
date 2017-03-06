@@ -103,7 +103,7 @@ def BJH(p,Q,gas_type='N2'):
 
 
     for istep in range(1,n_step+1):
-        print('\nistep/nstep',istep,n_step)
+        #print('\nistep/nstep',istep,n_step)
         status[istep]= 0 
         #print(status)
         if istep == n_step:
