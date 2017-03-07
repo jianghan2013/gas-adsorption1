@@ -67,6 +67,20 @@ def restrict_isotherm( P, Q, Pmin, Pmax ):
     #b = np.logical_and( P >= Pmin, P <= Pmax)
     return P[index], Q[index]
 
+def get_spline(p_rels,Q,order=2):
+    s = InterpolatedUnivariateSpline(p_rels,Q,k=order)
+    return s
+
+def use_my_pressure_points(p_exp,Q_exp,gas_type):
+    const = get_gas_constant(gas_type)
+    # predefine the radius
+    radius_s = np.array([8,9,10,11,12,13,14,16,19,27,42,75,140,279,360,460,828,1600])
+    # convert radius to pressure
+    p_s = radius_to_pressure(radius_s,const)
+    func_spline = get_spline(p_exp,Q_exp,2)
+    # get Q_s from spline function
+    Q_s = func_spline(p_s)
+    return p_s,Q_s
 
 #---------------- main calculation function
 
@@ -197,7 +211,7 @@ def result_psd(Davg,LP,Dp,k):
     return Vp,Vp_ccum,Vp_dlogD
 
 #---------------- main function-----------------
-def BJH_main(p,Q,pmin=0.30,pmax=0.999,gas_type='N2'):
+def BJH_main(p,Q,pmin=0.30,pmax=0.999,use_pressure=True,gas_type='N2'):
     '''
 
     :argument
@@ -208,8 +222,10 @@ def BJH_main(p,Q,pmin=0.30,pmax=0.999,gas_type='N2'):
     :param gas_type:
     :return:
     '''
+    if use_pressure:
+        p,Q = use_my_pressure_points(p, Q, gas_type)
     p_res,Q_res = restrict_isotherm( p, Q, pmin, pmax )
     Davg, LP, Dp, dV_desorp, k = BJH(p_res,Q_res,gas_type)
     Vp, Vp_ccum, Vp_dlogD = result_psd(Davg,LP,Dp,k)
-    return Vp,Vp_ccum,Vp_dlogD
+    return Davg,Vp,Vp_ccum,Vp_dlogD
 

@@ -51,7 +51,7 @@ class testing(unittest.TestCase):
         from BJH_function import test_isotherm
         p_rels,q,my_volume = test_isotherm.shale_3_14()
 
-        Vp,Vp_ccum,Vp_dlogD = BJH_calculation.BJH_main(p_rels,q)
+        Davg,Vp,Vp_ccum,Vp_dlogD = BJH_calculation.BJH_main(p_rels,q,use_pressure=False)
         npt.assert_array_almost_equal(Vp,my_volume,decimal=8)
 
 
