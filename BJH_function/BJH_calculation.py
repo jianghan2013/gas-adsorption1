@@ -52,7 +52,23 @@ def get_CSA_a(del_tw,Davg,LP,k,istep,n_step):
             Vd_istep += LP[j]*CSA_a[j]
     return Vd_istep
 
-#---------------- main function
+def restrict_isotherm( P, Q, Pmin, Pmax ):
+    """Restrict the isotherm Q, P to pressures between min and max.
+
+    Q: Quanity adsorbed
+    P: Pressure (relative or absolute)
+    Pmin: minimum pressure
+    Pmax: maximum pressure
+
+    Returns:  Qads, P restricted to the specified range
+    """
+
+    index = (P >= Pmin) & (P <= Pmax)
+    #b = np.logical_and( P >= Pmin, P <= Pmax)
+    return P[index], Q[index]
+
+
+#---------------- main calculation function
 
 def BJH(p,Q,gas_type='N2'):
     '''
@@ -179,3 +195,21 @@ def result_psd(Davg,LP,Dp,k):
     for i in range(1,k+1):
         Vp_dlogD[i] = Vp[i]/ np.log10(Dp[i]/Dp[i+1])
     return Vp,Vp_ccum,Vp_dlogD
+
+#---------------- main function-----------------
+def BJH_main(p,Q,pmin=0.30,pmax=0.999,gas_type='N2'):
+    '''
+
+    :argument
+    :param p:
+    :param Q:
+    :param pmin:
+    :param pmax:
+    :param gas_type:
+    :return:
+    '''
+    p_res,Q_res = restrict_isotherm( p, Q, pmin, pmax )
+    Davg, LP, Dp, dV_desorp, k = BJH(p_res,Q_res,gas_type)
+    Vp, Vp_ccum, Vp_dlogD = result_psd(Davg,LP,Dp,k)
+    return Vp,Vp_ccum,Vp_dlogD
+

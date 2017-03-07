@@ -39,12 +39,19 @@ class testing(unittest.TestCase):
         # case 3
         npt.assert_almost_equal(BJH_calculation.get_CSA_a(1, np.array([0,1,2]), np.array([0,1,3]), 2, 3, 4)*10**(16),34.55751919,decimal=7)
 
+    def test_restrict_isotherm(self):
+        P = np.arange(0.1, 0.9, 0.1)
+        Q = np.arange(0.2, 1.8, 0.2)
+        P1, Q1 = BJH_calculation.restrict_isotherm(P, Q, 0.3, 0.8)
+        npt.assert_array_almost_equal(P1,[0.3,  0.4,    0.5,    0.6,    0.7,    0.8])
+        npt.assert_array_almost_equal(Q1, [0.6,  0.8,  1. ,  1.2,  1.4,  1.6])
+
     def test_BJH_main_function(self):
         #3_14 n2
         from BJH_function import test_isotherm
         p_rels,q,my_volume = test_isotherm.shale_3_14()
-        Davg,LP,Dp,dV_desorp,k = BJH_calculation.BJH(p_rels, q, 'N2')
-        Vp,Vp_ccum,Vp_dlogD = BJH_calculation.result_psd(Davg,LP,Dp,k)
+
+        Vp,Vp_ccum,Vp_dlogD = BJH_calculation.BJH_main(p_rels,q)
         npt.assert_array_almost_equal(Vp,my_volume,decimal=8)
 
 
