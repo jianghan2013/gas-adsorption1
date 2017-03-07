@@ -12,7 +12,7 @@ class testing(unittest.TestCase):
         npt.assert_almost_equal(N2['A'],9.53,decimal=3)
         npt.assert_almost_equal(N2['Vmol'], 34.67, decimal=3)
         npt.assert_almost_equal(Ar['A'], 10.44)
-        npt.assert_almost_equal(Ar['Vmol'], 22.56)
+        npt.assert_almost_equal(Ar['Vmol'], 28)
 
     def test_insert_zero(self):
         b = BJH_calculation.insert_zero([1,2])

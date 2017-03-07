@@ -10,7 +10,7 @@ def get_gas_constant(gas_type='N2'):
         const['Vmol'] = 34.67
     elif gas_type == 'Ar':
         const['A'] = 10.44
-        const['Vmol'] = 22.56
+        const['Vmol'] = 28#22.56
     else:
         print('wrong gas type')
         const=-1
