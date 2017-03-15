@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.interpolate import InterpolatedUnivariateSpline
-
+import matplotlib.pyplot as plt
 def get_gas_constant(gas_type='N2'):
     const = dict()
     # liquid molar volume [cm^3/mol]
@@ -81,6 +81,25 @@ def use_my_pressure_points(p_exp,Q_exp,gas_type):
     # get Q_s from spline function
     Q_s = func_spline(p_s)
     return p_s,Q_s
+
+def get_porosity(p,q,gas_type='N2'):
+    '''
+    calculate the porosity of total, meso and micro
+
+    :param p: relative pressure points
+    :param q: adsorption amount
+    :param gas_type: type of gas
+    :return: v_pore_total,v_pore_micro,v_pore_meso
+    '''
+    p_res, q_res = restrict_isotherm(p, q, Pmin=0.3, Pmax=0.999)
+    p0,q0 = p_res[0],q_res[0]
+    p1,q1 = p_res[-1],q_res[-1]
+    print(p0,q0,p1,q1)
+    gas_const = get_gas_constant(gas_type)
+    vpore_total = q1*gas_const['Vmol'] / 22414.0
+    vpore_micro = q0*gas_const['Vmol'] / 22414.0
+    vpore_meso = vpore_total - vpore_micro
+    return vpore_total,vpore_micro,vpore_meso
 
 #---------------- main calculation function
 
@@ -228,4 +247,43 @@ def BJH_main(p,Q,pmin=0.30,pmax=0.999,use_pressure=True,gas_type='N2'):
     Davg, LP, Dp, dV_desorp, k = BJH(p_res,Q_res,gas_type)
     Vp, Vp_ccum, Vp_dlogD = result_psd(Davg,LP,Dp,k)
     return Davg,Vp,Vp_ccum,Vp_dlogD
+
+class BJH_method():
+    def __init__(self,p,q,pmin=0.30,pmax=0.999,use_pressure=True,gas_type='N2'):
+        self.p = p
+        self.q = q
+        self.gas_type = gas_type
+        self.use_pressure = use_pressure
+        self.p_fix = np.array([0]) # my defined pressure
+        self.q_fix = np.array([0]) # my defined adsorption quantity
+        if use_pressure:
+            self.p_fix, self.q_fix = use_my_pressure_points(self.p, self.q, self.gas_type)
+            self.p_res, self.q_res = restrict_isotherm(self.p_fix, self.q_fix, pmin, pmax)
+        else:
+            self.p_res, self.q_res = restrict_isotherm(self.p, self.q, pmin, pmax)
+
+
+    def plot_isotherm(self):
+        figure = plt.figure()
+        legend = []
+        legend_raw, = plt.plot(self.p,self.q,'ko-',label='raw iso')
+        legend.append(legend_raw)
+        if self.use_pressure:
+            legend_fix, = plt.plot(self.p, self.q, 'r.',label='fixed iso')
+            legend.append(legend_fix)
+        plt.legend(handles=legend)
+
+
+    def do_BJH(self):
+        self.Davg, self.LP, self.Dp, self.dV_desorp, self.k = BJH(self.p_res, self.q_res, self.gas_type)
+        self.Vp, self.Vp_ccum, self.Vp_dlogD = result_psd(self.Davg, self.LP, self.Dp, self.k)
+
+    def plot_BJH_psd(self,plot_type = 'incremental'):
+        figure = plt.figure()
+        legend = []
+        if plot_type ==   'incremental':
+            plt.title('PSD by incremental pore volume')
+            legend_incre, = plt.plot(self.Davg, self.Vp, 'ko-', label='incremental')
+            legend.append(legend_incre)
+        plt.legend(handles=legend)
 

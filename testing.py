@@ -2,6 +2,7 @@ import unittest
 from BJH_function import BJH_calculation
 import numpy as np
 import numpy.testing as npt
+from BJH_function import test_isotherm
 
 class testing(unittest.TestCase):
 
@@ -46,13 +47,27 @@ class testing(unittest.TestCase):
         npt.assert_array_almost_equal(P1,[0.3,  0.4,    0.5,    0.6,    0.7,    0.8])
         npt.assert_array_almost_equal(Q1, [0.6,  0.8,  1. ,  1.2,  1.4,  1.6])
 
+    def test_get_porosity(self):
+
+        p, q, BJH_calculate_volume = test_isotherm.shale_3_14()
+        # test for Ar
+        vpore_total, vpore_micro, vpore_meso = BJH_calculation.get_porosity(p, q, 'Ar')
+        npt.assert_almost_equal(vpore_total,q[-1]*28/22414.0)
+        npt.assert_almost_equal(vpore_micro,q[0] * 28 / 22414.0)
+        npt.assert_almost_equal(vpore_meso, (q[-1]-q[0]) * 28 / 22414.0)
+
     def test_BJH_main_function(self):
         #3_14 n2
-        from BJH_function import test_isotherm
         p_rels,q,my_volume = test_isotherm.shale_3_14()
 
         Davg,Vp,Vp_ccum,Vp_dlogD = BJH_calculation.BJH_main(p_rels,q,use_pressure=False)
         npt.assert_array_almost_equal(Vp,my_volume,decimal=8)
+
+    def test_BJH_class(self):
+        p, q, my_volume = test_isotherm.shale_3_14()
+        my_BJH = BJH_calculation.BJH_method(p,q,use_pressure=False)
+        my_BJH.do_BJH()
+        npt.assert_array_almost_equal(my_BJH.Vp,my_volume,decimal=8)
 
 
         #assert np.assert_almost_equal

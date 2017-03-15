@@ -2,6 +2,13 @@ import numpy as np
 
 
 def shale_3_14():
+    '''
+
+    p_rels input data
+    q: input data
+    BJH_calculate_volume: pore size distribution
+    :return:
+    '''
     p_rels = np.array([0.30445319, 0.35455676, 0.39906515, 0.44914481, 0.49916705, 0.54897325,
                        0.59911312, 0.70041378, 0.79602164, 0.88106023, 0.93408762, 0.96615712,
                        0.97399365, 0.97956734, 0.98856465, 0.99454603])
