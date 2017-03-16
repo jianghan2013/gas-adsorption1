@@ -65,10 +65,15 @@ class testing(unittest.TestCase):
 
     def test_BJH_class(self):
         p, q, my_volume = test_isotherm.shale_3_14()
+        # test 1
         my_BJH = BJH_calculation.BJH_method(p,q,use_pressure=False)
         my_BJH.do_BJH()
         npt.assert_array_almost_equal(my_BJH.Vp,my_volume,decimal=8)
 
+        # test 2
+        npt.assert_almost_equal(my_BJH.vpore_total,q[-1]*34.67/22414.0)
+        npt.assert_almost_equal(my_BJH.vpore_micro,q[0] * 34.67 / 22414.0)
+        npt.assert_almost_equal(my_BJH.vpore_meso, (q[-1]-q[0]) * 34.67 / 22414.0)
 
         #assert np.assert_almost_equal
 if __name__ == '__main__':
