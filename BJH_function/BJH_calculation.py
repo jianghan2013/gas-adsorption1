@@ -71,18 +71,18 @@ def get_spline(p_rels,Q,order=2):
     s = InterpolatedUnivariateSpline(p_rels,Q,k=order)
     return s
 
-def use_my_pressure_points(p_exp,Q_exp,gas_type):
+def use_my_pressure_points(p_raw,q_raw,gas_type):
     const = get_gas_constant(gas_type)
     # predefine the radius
     radius_s = np.array([8,9,10,11,12,13,14,16,19,27,42,75,140,279,360,460,828,1600])
     # convert radius to pressure
     p_s = radius_to_pressure(radius_s,const)
-    func_spline = get_spline(p_exp,Q_exp,2)
+    func_spline = get_spline(p_raw,q_raw,2)
     # get Q_s from spline function
-    Q_s = func_spline(p_s)
-    return p_s,Q_s
+    q_s = func_spline(p_s)
+    return p_s,q_s
 
-def get_porosity(p,q,gas_type='N2'):
+def get_porosity(p_raw,q_raw,gas_type='N2'):
     '''
     calculate the porosity of total, meso and micro
 
@@ -91,13 +91,22 @@ def get_porosity(p,q,gas_type='N2'):
     :param gas_type: type of gas
     :return: v_pore_total,v_pore_micro,v_pore_meso
     '''
-    p_res, q_res = restrict_isotherm(p, q, Pmin=0.3, Pmax=0.999)
-    p0,q0 = p_res[0],q_res[0]
-    p1,q1 = p_res[-1],q_res[-1]
-    print(p0,q0,p1,q1)
-    gas_const = get_gas_constant(gas_type)
-    vpore_total = q1*gas_const['Vmol'] / 22414.0
-    vpore_micro = q0*gas_const['Vmol'] / 22414.0
+    const = get_gas_constant(gas_type)
+    r_micro = 8 # lagest micro pore radius [am]
+    r_meso = 1600 # lagest meso/macro pore radius [am]
+    p_micro = radius_to_pressure(r_micro, const)
+    p_meso = radius_to_pressure(r_meso, const)
+    func_spline = get_spline(p_raw, q_raw, 2)
+    q_micro = func_spline(p_micro)
+    q_meso = func_spline(p_meso)
+
+    #p_res, q_res = restrict_isotherm(p, q, Pmin=0.3, Pmax=0.999)
+    #p0,q0 = p_res[0],q_res[0]
+    #p1,q1 = p_res[-1],q_res[-1]
+    #print(p0,q0,p1,q1)
+    #gas_const = get_gas_constant(gas_type)
+    vpore_total = q_meso*const['Vmol'] / 22414.0
+    vpore_micro = q_micro*const['Vmol'] / 22414.0
     vpore_meso = vpore_total - vpore_micro
     return vpore_total,vpore_micro,vpore_meso
 
@@ -232,7 +241,7 @@ def result_psd(Davg,LP,Dp,k):
 #---------------- main function-----------------
 def BJH_main(p,Q,pmin=0.30,pmax=0.999,use_pressure=True,gas_type='N2'):
     '''
-
+    currently  not in use
     :argument
     :param p:
     :param Q:
@@ -247,6 +256,7 @@ def BJH_main(p,Q,pmin=0.30,pmax=0.999,use_pressure=True,gas_type='N2'):
     Davg, LP, Dp, dV_desorp, k = BJH(p_res,Q_res,gas_type)
     Vp, Vp_ccum, Vp_dlogD = result_psd(Davg,LP,Dp,k)
     return Davg,Vp,Vp_ccum,Vp_dlogD
+
 #------------------------- class ---------------------------------------
 
 class BJH_method():
@@ -272,12 +282,13 @@ class BJH_method():
         if self.use_pressure:
             legend_fix, = plt.plot(self.p, self.q, 'r.',label='fixed iso')
             legend.append(legend_fix)
-        plt.legend(handles=legend,loc=4)
-        plt.grid()
+        plt.legend(handles=legend,loc=2)
+        #plt.grid()
 
 
     def do_BJH(self):
-        self.vpore_total, self.vpore_micro, self.vpore_meso = get_porosity(self.p_res,self.q_res,gas_type=self.gas_type)
+        #if self.use_pressure: #only when we using fixed pressure point
+        self.vpore_total, self.vpore_micro, self.vpore_meso = get_porosity(self.p_raw,self.q_raw,gas_type=self.gas_type)
         self.Davg, self.LP, self.Dp, self.dV_desorp, self.k = BJH(self.p_res, self.q_res, self.gas_type)
         self.Vp, self.Vp_ccum, self.Vp_dlogD = result_psd(self.Davg, self.LP, self.Dp, self.k)
 		
@@ -290,5 +301,5 @@ class BJH_method():
             legend_incre, = plt.semilogx(self.Davg[1:], self.Vp[1:], 'go-', label='incremental')
             legend.append(legend_incre)
         plt.legend(handles=legend)
-        plt.grid()
+        #plt.grid()
 

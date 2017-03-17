@@ -3,6 +3,9 @@ from BJH_function import BJH_calculation
 import numpy as np
 import numpy.testing as npt
 from BJH_function import test_isotherm
+import matplotlib.pyplot as plt
+
+
 
 class testing(unittest.TestCase):
 
@@ -48,13 +51,13 @@ class testing(unittest.TestCase):
         npt.assert_array_almost_equal(Q1, [0.6,  0.8,  1. ,  1.2,  1.4,  1.6])
 
     def test_get_porosity(self):
-
-        p, q, BJH_calculate_volume = test_isotherm.shale_3_14()
+        pass
+        #p, q, BJH_calculate_volume = test_isotherm.shale_3_14()
         # test for Ar
-        vpore_total, vpore_micro, vpore_meso = BJH_calculation.get_porosity(p, q, 'Ar')
-        npt.assert_almost_equal(vpore_total,q[-1]*28/22414.0)
-        npt.assert_almost_equal(vpore_micro,q[0] * 28 / 22414.0)
-        npt.assert_almost_equal(vpore_meso, (q[-1]-q[0]) * 28 / 22414.0)
+        #vpore_total, vpore_micro, vpore_meso = BJH_calculation.get_porosity(p, q, 'Ar')
+        #npt.assert_almost_equal(vpore_total,q[-1]*28/22414.0)
+        #npt.assert_almost_equal(vpore_micro,q[0] * 28 / 22414.0)
+        #npt.assert_almost_equal(vpore_meso, (q[-1]-q[0]) * 28 / 22414.0)
 
     def test_BJH_main_function(self):
         #3_14 n2
@@ -66,14 +69,39 @@ class testing(unittest.TestCase):
     def test_BJH_class(self):
         p, q, my_volume = test_isotherm.shale_3_14()
         # test 1
-        my_BJH = BJH_calculation.BJH_method(p,q,use_pressure=False)
-        my_BJH.do_BJH()
-        npt.assert_array_almost_equal(my_BJH.Vp,my_volume,decimal=8)
+        my_BJH_unspline = BJH_calculation.BJH_method(p,q,use_pressure=False)
+        my_BJH_unspline.do_BJH()
+        npt.assert_array_almost_equal(my_BJH_unspline.Vp,my_volume,decimal=8)
 
+        # test 2 using pressure
+        my_BJH_spline = BJH_calculation.BJH_method(p, q, use_pressure=True)
+        my_BJH_spline.do_BJH()
+
+
+        npt.assert_almost_equal(my_BJH_spline.vpore_total, my_BJH_spline.q[-1] * 34.67 / 22414.0)
+        npt.assert_almost_equal(my_BJH_spline.vpore_micro, my_BJH_spline.q[0] * 34.67 / 22414.0)
+        npt.assert_almost_equal(my_BJH_spline.vpore_meso, (my_BJH_spline.q[-1] - my_BJH_spline.q[0]) * 34.67 / 22414.0)
+
+        # compare porosity from unspline and spline
+        npt.assert_almost_equal(my_BJH_unspline.vpore_total, my_BJH_spline.q[-1] * 34.67 / 22414.0)
+        npt.assert_almost_equal(my_BJH_unspline.vpore_micro, my_BJH_spline.q[0] * 34.67 / 22414.0)
+        npt.assert_almost_equal(my_BJH_unspline.vpore_meso, (my_BJH_spline.q[-1] - my_BJH_spline.q[0]) * 34.67 / 22414.0)
+
+        # test 3 shale_3_14_spline
+        p_s,q_s,Vp_s = test_isotherm.shale_3_14_spline()
+        npt.assert_almost_equal(my_BJH_spline.vpore_total, q_s[-1]* 34.67 / 22414.0)
+        #figure = plt.figure()
+        #lg1,=plt.plot(my_BJH_1.p_raw,my_BJH_1.q_raw,'ro-',label='BJH raw')
+        #lg2,=plt.plot(p,q,'k.',label='raw')
+        #lg3,=plt.plot(my_BJH_1.p,my_BJH_1.q,'g^',label='BJH fixed')
+        #plt.legend(handles = [lg1,lg2,lg3],loc=2 )
+        #plt.show()
+        #print(my_BJH_1.p)
+        #print(my_BJH_1.q)
+        #print(my_BJH_1.Vp)
         # test 2
-        npt.assert_almost_equal(my_BJH.vpore_total,q[-1]*34.67/22414.0)
-        npt.assert_almost_equal(my_BJH.vpore_micro,q[0] * 34.67 / 22414.0)
-        npt.assert_almost_equal(my_BJH.vpore_meso, (q[-1]-q[0]) * 34.67 / 22414.0)
+
+
 
         #assert np.assert_almost_equal
 if __name__ == '__main__':
