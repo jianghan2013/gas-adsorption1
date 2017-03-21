@@ -36,6 +36,7 @@ def iso_reading(direct,core_names,sample_names):
             # get psd
             iso[core_name][sample_name]['Davg'] = psd.Davg
             iso[core_name][sample_name]['Vp'] = psd.Vp
+            iso[core_name][sample_name]['Vp_dlogD'] = psd.Vp_dlogD
     return iso
 
 #------------- plotting ------------------------
@@ -95,7 +96,54 @@ def plot_porosity_bar(iso,core_names,sample_names,save =False):
     #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
     plt.show()
 
-def plot_isotherm_per_core_in_one_figure(iso,core_names_select,sample_names_select):
+def plot_BET_surface_bar(iso,core_names,BET_select,save =False):
+    '''
+
+    '''
+#    figure = plt.figure()
+    xticklabel = core_names
+    fig,ax = plt.subplots(1,1)
+    ind = np.arange(8)
+    width =0.35
+    #BET_select
+    rects1 = ax.bar(ind, BET_select[:, 1], width, color='b')
+    rects2 = ax.bar(ind+width+0.02,BET_select[:,0], width, color='r')
+    #ax.legend()
+    ax.set_xlim([-0.2,8])
+    plt.setp(ax, xticks=ind + width+0.02, xticklabels=xticklabel)
+    ax.legend([rects2[0], rects1[0]], ['F', 'In'], fancybox=True, framealpha=0.5)
+    plt.xlabel('core names')
+    plt.ylabel('specific surface area m2/g')
+
+    if save:
+        plt.savefig(direct + 'BET_all_core_bar.png')
+    plt.show()
+
+def plot_total_porosity_bar(iso,core_names_select,sample_names_select,save=False):
+
+    xticklabel = core_names
+    fig, ax = plt.subplots(1, 1)
+    ind = np.arange(8)
+    width = 0.35
+    total_porosity_F = list()
+    total_porosity_In = list()
+    for i,core_name in enumerate(core_names_select):
+        sample_F = sample_names_select[i][0]
+        sample_In = sample_names_select[i][1]
+        total_porosity_F.append(iso[core_name][sample_F]['vpore_total'])
+        total_porosity_In.append(iso[core_name][sample_In]['vpore_total'])
+
+    rects1 = ax.bar(ind, total_porosity_In[:], width, color='b')
+    rects2 = ax.bar(ind+width+0.02, total_porosity_F[:], width, color='r')
+    ax.legend([rects2[0], rects1[0]], ['F', 'In'], fancybox=True, framealpha=0.5)
+    plt.xlabel('core names')
+    plt.setp(ax, xticks=ind + width + 0.02, xticklabels=xticklabel)
+    plt.ylabel('pore volume (cm3/g)')
+    if save:
+        plt.savefig(direct + 'porosity_all_core_bar.png')
+    plt.show()
+
+def plot_isotherm_per_core_in_one_figure(iso,core_names_select,sample_names_select,save=False):
 
 
     fig, axies = plt.subplots(2, 4, figsize=(14, 8))
@@ -125,7 +173,59 @@ def plot_isotherm_per_core_in_one_figure(iso,core_names_select,sample_names_sele
             #axies[ax_0,ax_1].set_xlabel('a')
         fig.text(0.5, 0.04, 'relative pressure', ha='center')
     plt.tight_layout(pad=4,w_pad=2,h_pad=2)
+
+    if save:
+        plt.savefig(direct + 'failed_intact_isotherm_8_subplots.png')
     plt.show()
+
+def plot_psd_per_core_in_one_figure(iso,core_names_select,sample_names_select,type ='normal',save=False):
+
+    if type == 'log':
+        volume_type = 'Vp_dlogD'
+    else:
+        volume_type ='Vp'
+
+    fig, axies = plt.subplots(2, 4, figsize=(14, 8))
+
+    for i,core_name in enumerate(core_names_select):
+        sample_F = sample_names_select[i][0]
+        sample_In = sample_names_select[i][1]
+    # calculate the axis index
+        ax_0 = i // 4
+        ax_1 = i % 4
+        #iso[core_name][sample_name][] = psd.Davg
+        #iso[core_name][sample_name]['Vp'] = psd.Vp
+        axies[ax_0, ax_1].plot(iso[core_name][sample_F]['Davg'][1:], iso[core_name][sample_F][volume_type][1:], 'r-', markersize=8,
+                               linewidth=2,alpha=0.7,label='F')
+        axies[ax_0, ax_1].plot(iso[core_name][sample_In]['Davg'][1:], iso[core_name][sample_In][volume_type][1:], 'b-', markersize=8,
+                               linewidth=2,alpha=0.7,label='In')
+        axies[ax_0,ax_1].legend(loc=4,fancybox=True, framealpha=0.5)
+
+        #axies[ax_0, ax_1].scatter(iso[core_name][sample_F]['Davg'], iso[core_name][sample_F][volume_type],s=50,facecolors='none',linewidths=1,edgecolors='k')
+        #axies[ax_0, ax_1].scatter(iso[core_name][sample_In]['Davg'], iso[core_name][sample_In][volume_type], s=50,facecolors='none', linewidths=1, edgecolors='k')
+
+        axies[ax_0, ax_1].set_title(core_name)
+        axies[ax_0,ax_1].set_xscale('log')
+        #axies[ax_0,ax_1].set_xlim([1,10**4])
+        axies[ax_0,ax_1].set_ylim(ymin=0)
+        #axies[ax_0, ax_1].plot(iso[core_name][sample_In]['p_ads'], iso[core_name][sample_In]['q_ads'],'o-',markersize=8,linewidth=2)
+        if ax_1 == 0:
+            if type == 'log':
+                axies[ax_0,ax_1].set_ylabel('dv/dlog pore volume')
+            else:
+                axies[ax_0, ax_1].set_ylabel('pore volume')
+        #if ax_1 == 1:
+            #axies[ax_0,ax_1].set_xlabel('a')
+        fig.text(0.5, 0.04, 'pore size', ha='center')
+    plt.tight_layout(pad=4,w_pad=2,h_pad=2)
+
+    if save:
+        if type =='log':
+            plt.savefig(direct + 'log'+'failed_intact_psd_8_subplots.png')
+        else:
+            plt.savefig(direct  + 'failed_intact_psd_8_subplots.png')
+    plt.show()
+
 
 
 def plot_intact_isotherm_all_core_in_one_figure(iso,core_names_select,sample_names_select,save=False):
@@ -153,6 +253,8 @@ def plot_intact_isotherm_all_core_in_one_figure(iso,core_names_select,sample_nam
     if save:
         plt.savefig(direct+'all_intact_isotherm.png')
     plt.show()
+
+
 
 def plot_isotherm_per_core(iso,core_names,sample_names,save=False):
     for i in range(0, len(core_names)):
@@ -183,7 +285,7 @@ def plot_isotherm_per_core(iso,core_names,sample_names,save=False):
         # data = data.to_dict()
         # print(data)
 
-def plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select):
+def plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select,save=False):
 
     ratio_mesos = []
     ratio_micros = []
@@ -206,6 +308,9 @@ def plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select):
     plt.xlim([0.6, 1.5])
     plt.ylim([0.6, 1.5])
 
+
+    if save:
+        plt.savefig(direct + 'porosity_ratio_all_sample.png')
     plt.show()
 
 #------------- main function
@@ -299,13 +404,35 @@ sample_names_select_1 = [
     ['HF_2', 'In_3']
 ]
 
+
+
+BET_select_1 = np.array([
+    [4.8029, 4.3175],
+    [6.1912, 6.2181 ],
+
+    [7.3412,6.8987],
+    [11.2472, 8.0645],
+
+    [10.4431,12.0849],
+    [7.3647,6.7764],
+
+    [8.7654, 6.9129],
+    [7.1313, 7.2602],
+
+])
+
+
 iso =  iso_reading(direct,core_names,sample_names)
 #plot_isotherm_per_core(iso,core_names,sample_names,save=True)
 #plot_porosity_bar(iso,core_names,sample_names,save =False)
-#plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select)
-#plot_isotherm_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1)
-plot_intact_isotherm_all_core_in_one_figure(iso,core_names_select,sample_names_select)
+#plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select,True)
+#plot_isotherm_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,False)
+#plot_intact_isotherm_all_core_in_one_figure(iso,core_names_select,sample_names_select)
+#plot_psd_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,'log',True)
 
+#print(BET_select_1[1,1])
+#plot_BET_surface_bar(iso,core_names_select_1,BET_select_1,True)
+plot_total_porosity_bar(iso,core_names_select_1,sample_names_select_1)
 '''
 for i, core_name in enumerate(core_names_select):
     Fail_micro = list()
