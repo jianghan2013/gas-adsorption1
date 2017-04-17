@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-plt.style.use('ggplot')
+#plt.style.use('ggplot')
 import pandas as pd
 from visualization import N2_plot
 from sklearn import linear_model
@@ -83,14 +83,14 @@ core_names_select_1 = [
 ]
 
 sample_names_select_1 = [
-    ['HF_1', 'In_1'],
-    ['HF_1', 'In_1'],
-
-    ['HF_1', 'In_1'],
+    ['HF_1', 'In_1','VF_1'],
     ['HF_1', 'In_1'],
 
     ['HF_1', 'In_1'],
     ['HF_1', 'In_1'],
+
+    ['HF_1', 'In_1'],
+    ['HF_1', 'In_1','HF_2'],
 
     ['HF_1', 'In_1'],
     ['HF_2', 'In_3']
@@ -173,10 +173,16 @@ ratio_BET = BET_select_1[:,0] / BET_select_1[:,1]
 
 
 #direct_co2 = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_CO2_trixial/'
+
 iso = N2_plot.iso_reading_N2(direct,core_names,sample_names)
-p = iso['3_42']['In_2']['p_ads']
-q = iso['3_42']['In_2']['q_ads']
-N2_plot.get_fractal_number(p,q,False)
+#N2_plot.plot_fractal_dimension_method(iso)
+f1 = iso['3_42']['In_2']['fractal_1']
+f2 = iso['3_42']['In_2']['fractal_2']
+#N2_plot.save_fractal_number(iso,core_names_select_1,sample_names_select_1,True)
+#f1,f2 = N2_plot.get_fractal_number(p,q,True)
+#print(f1)
+#print(f2)
+
 print('yes')
 
 #print(df_compare)
@@ -188,12 +194,14 @@ df_kerogen = pd.read_excel(file_prechar,sheetname='kerogen_porosity')
 file_post = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_N2_triaxial/post_data.xlsx'
 df_BET =  pd.read_excel(file_post,sheetname='BET')
 #df_BET['diff'] = df_BET['F']- df_BET['In']
-
+#N2_plot.plot_mineral_bar(df_xrd)
 df_N2_total =  pd.read_excel(file_post,sheetname='N2_total')
 df_N2_meso =  pd.read_excel(file_post,sheetname='N2_meso')
 df_micro =  pd.read_excel(file_post,sheetname='micro')
 df_N2_micro =  pd.read_excel(file_post,sheetname='N2_micro')
-
+df_fractal = pd.read_excel(file_post,sheetname='fractal')
+df_BET_C = pd.read_excel(file_post,sheetname='BET_C')
+#N2_plot.plot_BET_constant(df_BET_C,'In')
 #df_N2_meso['diff'] = df_N2_meso['F']- df_N2_meso['In']
 #df_N2_micro['diff'] = df_N2_micro['F']- df_N2_micro['In']
 
@@ -201,6 +209,11 @@ df_N2_micro =  pd.read_excel(file_post,sheetname='N2_micro')
 #print(ratio_mesos)
 #print(df_N2_meso['ratio'])
 
+#N2_plot.plot_full_CO2_isotherm()
+
+
+
+print(df_fractal)
 id0 = 0
 id1 = 10
 df_compare = pd.DataFrame(data={
@@ -209,7 +222,10 @@ df_compare = pd.DataFrame(data={
                                 '1r_N2_total': np.array(df_N2_total['ratio'])[id0:id1],
                                 #'N2_ini_meso': N2_psd_total[:,1] - N2_psd_micro[:,1],
                                 #'N2_ini_micro': N2_psd_micro[:,1],
-                                #'1r_N2_total':ratio_total,
+                                'fractal_In_D12': np.array(df_fractal['In_D12'])[id0:id1],
+                                'fractal_In_D22': np.array(df_fractal['In_D22'])[id0:id1],
+                                'fractal_diff_D12': np.array(df_fractal['diff_D12'])[id0:id1],
+                                'fractal_diff_D22': np.array(df_fractal['diff_D22'])[id0:id1],
                                 'N2_meso_diff': np.array(df_N2_meso['diff'])[id0:id1],
                                 'micro_diff': np.array(df_micro['diff'])[id0:id1],
                                 'BET_diff': np.array(df_BET['diff'])[id0:id1],
@@ -220,7 +236,7 @@ df_compare = pd.DataFrame(data={
                                 'kerogen_meso': np.array(df_kerogen['N2_meso'])[id0:id1],
                                 'kerogen_micro': np.array(df_kerogen['N2_micro'])[id0:id1],
                                 'kerogen_total': np.array(df_kerogen['N2_total'])[id0:id1],
-                                #'quartz': np.array(df_xrd['quartz']),
+                                'quartz': np.array(df_xrd['quartz']),
                                 #'HI_Tmax': np.array(df_toc['HI'][id0:id1])*np.array(df_toc['Tmax'][id0:id1]),
                                 'HI': np.array(df_toc['HI']),
                                 'Tmax': np.array(df_toc['Tmax']),
@@ -241,7 +257,25 @@ colors = ['g','g','g',
 
 #scatter_matrix(df_compare[3:], alpha=0.5, figsize=(6, 6), diagonal='kde',s=300)
 #plt.show()
-#N2_plot.plot_df(df_compare,'N2_meso_diff','BET_diff',False,True)
+
+
+#N2_plot.plot_df(df_compare,'fractal_In_D12','fractal_diff_D12',linear = False,xlim=[2.3,2.7,0],ylim=[-0.03,0.06,None])
+#--------- checking list ------------------
+#N2_plot.plot_df(df_compare,'1r_N2_meso','1r_micro',xlim=[0.6,1.8,1.0],ylim=[0.6,1.8,1.0],linear = False)
+#N2_plot.plot_df(df_compare,'1r_BET','1r_micro',xlim=[0.8,1.6,1.0],ylim=[0.8,1.6,1.0],linear = True,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'1r_BET','1r_N2_meso',xlim=[0.8,1.6,1.0],ylim=[0.8,1.6,1.0],linear = True,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'BET_diff','micro_diff',xlim=[-2,4,0],ylim=[-0.0005,0.0012,0],linear = True,x_inter=[-1,2.5])
+#N2_plot.plot_df(df_compare,'BET_diff','N2_meso_diff',xlim=[-2,4,0],ylim=[-0.0005,0.0012,0],linear = True,x_inter=[-1,2.5])
+#N2_plot.plot_df(df_compare,'fractal_diff_D12','fractal_diff_D22',xlim=[-0.02,0.06,0],ylim=[-0.02,0.04,0],linear = False,x_inter=[-1,2.5])
+#N2_plot.plot_df(df_compare,'fractal_diff_D12','1r_micro',xlim=[-0.02,0.06,None],ylim=[-0.02,0.04,None],linear = False,x_inter=[-0.01,0.015])
+N2_plot.plot_df(df_compare,'1r_N2_meso','toc',xlim=[-0.02,0.06,None],ylim=[-0.02,0.04,None],linear = False,x_inter=[-0.01,0.015])
+#plt.grid
+plt.show()
+
+#N2_plot.plot_df(df_compare,'kerogen_total','fractal_diff_D22',xlim=[2.3,2.7,None],ylim=[-0.03,0.06,None],linear = False)
+#N2_plot.plot_df(df_compare,'fractal_diff_D22','fractal_diff_D12',plotline=True,linear = False,xlim=[-0.02,0.03],ylim=[-0.03,0.06],base=0)
+
+
 #plt.show()
 #N2_plot.plot_df(df_compare,'1r_N2_meso','1r_BET',True,True)
 #plt.show()
@@ -260,7 +294,7 @@ colors = ['g','g','g',
 #N2_plot.plot_isotherm_per_core(iso,core_names_select_1,sample_names_select_1,save=True)
 #N2_plot.plot_porosity_bar(iso,core_names,sample_names,save =True)
 #N2_plot.plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select,True)
-#N2_plot.plot_isotherm_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,True)
+#N2_plot.plot_isotherm_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,False)
 #N2_plot.plot_intact_isotherm_all_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,True)
 #N2_plot.plot_psd_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,'my',True)
 

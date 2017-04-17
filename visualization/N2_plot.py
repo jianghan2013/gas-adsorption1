@@ -3,7 +3,7 @@ from BJH_function import BJH_calculation
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
+#plt.style.use('ggplot')
 from sklearn import linear_model
 from sklearn.metrics import r2_score
 
@@ -53,6 +53,13 @@ def iso_reading_N2(direct,core_names,sample_names):
             iso[core_name][sample_name]['Davg'] = psd.Davg
             iso[core_name][sample_name]['Vp'] = psd.Vp
             iso[core_name][sample_name]['Vp_dlogD'] = psd.Vp_dlogD
+
+            # do fractal number
+            fractal_1, fractal_2 = get_fractal_number(p_ads, q_ads, False)
+            iso[core_name][sample_name]['fractal_1'] = fractal_1
+            iso[core_name][sample_name]['fractal_2'] = fractal_2
+
+
     return iso
 
 
@@ -170,7 +177,7 @@ def plot_total_porosity_bar(iso,core_names_select,sample_names_select,save=False
 def plot_isotherm_per_core_in_one_figure(iso,core_names_select,sample_names_select,save=False):
 
     direct = iso['direct']
-    fig, axies = plt.subplots(2, 4, figsize=(14, 8))
+    fig, axies = plt.subplots(2, 4, figsize=(12, 8))
 
     for i,core_name in enumerate(core_names_select):
         sample_F = sample_names_select[i][0]
@@ -192,14 +199,16 @@ def plot_isotherm_per_core_in_one_figure(iso,core_names_select,sample_names_sele
         if len(sample_names_select[i]) > 2:
             axies[ax_0, ax_1].plot(iso[core_name][sample_VF]['p_ads'], iso[core_name][sample_VF]['q_ads'], 'g-',
                                    markersize=8,linewidth=2, label='VF')
-        axies[ax_0, ax_1].legend(loc=2)
+        if (ax_0 == 0) & (ax_1 == 0):
+                axies[ax_0, ax_1].legend(loc=2)
+        #axies[ax_0, ax_1].legend(loc=2)
         axies[ax_0, ax_1].scatter(iso[core_name][sample_F]['p_ads'], iso[core_name][sample_F]['q_ads'],s=80,
-                                  facecolors='none',linewidths=1,edgecolors='r',alpha=0.4,label='HF')
+                                  facecolors='none',linewidths=1,edgecolors='r',alpha=1,label='HF')
         axies[ax_0, ax_1].scatter(iso[core_name][sample_In]['p_ads'], iso[core_name][sample_In]['q_ads'], s=80,
-                                  facecolors='none', linewidths=1, edgecolors='b',alpha=0.4,label='In')
+                                  facecolors='none', linewidths=1, edgecolors='b',alpha=1,label='In')
         if len(sample_names_select[i]) > 2:
             axies[ax_0, ax_1].scatter(iso[core_name][sample_VF]['p_ads'], iso[core_name][sample_VF]['q_ads'], s=80,
-                                  facecolors='none', linewidths=1, edgecolors='g',alpha=0.4,label='VF')
+                                  facecolors='none', linewidths=1, edgecolors='g',alpha=1,label='VF')
 
 
 
@@ -207,7 +216,7 @@ def plot_isotherm_per_core_in_one_figure(iso,core_names_select,sample_names_sele
 
         #plt.legend(handles=legends)
         axies[ax_0, ax_1].set_title(core_name)
-        axies[ax_0,ax_1].set_xlim([0,1])
+        axies[ax_0,ax_1].set_xlim([-0.1,1.1])
         axies[ax_0,ax_1].set_ylim(ymin=0)
         #axies[ax_0, ax_1].plot(iso[core_name][sample_In]['p_ads'], iso[core_name][sample_In]['q_ads'],'o-',markersize=8,linewidth=2)
         if ax_1 == 0:
@@ -371,7 +380,7 @@ def plot_porosity_ratio_all_sample(iso,core_names_select,sample_names_select,sav
     plt.show()
     return ratio_mesos,ratio_micros
 
-def plot_df(df,col1,col2,plotline=False,linear = False):
+def plot_df(df,col1,col2,xlim=[0.8,1.8,1],ylim=[0.6,1.8,1],linear = False,x_inter=[0.9,1.4]):
     plt.plot(df[col1][:3],df[col2][:3],'ro',markersize=10,alpha=0.8)
     plt.plot(df[col1][3:8], df[col2][3:8], 'go',markersize=10,alpha=0.8)
     plt.plot(df[col1][8:9], df[col2][8:9], 'r^',markersize=10,alpha=0.8)
@@ -379,11 +388,14 @@ def plot_df(df,col1,col2,plotline=False,linear = False):
 
     plt.xlabel(col1)
     plt.ylabel(col2)
-    if plotline:
-        plt.plot([1, 1], [0.8, 1.6], 'k--', linewidth=3, alpha=0.4)
-        plt.plot([0.8, 1.6], [1, 1], 'k--', linewidth=3, alpha=0.4)
-        plt.xlim([0.6, 1.8])
-        plt.ylim([0.6, 1.8])
+    if ylim[2] is not None:
+        plt.plot([ylim[2], ylim[2]], [ylim[0], ylim[1]], 'k--', linewidth=3, alpha=0.4)
+    if xlim[2] is not None:
+        plt.plot([xlim[0], xlim[1]], [xlim[2], xlim[2]], 'k--', linewidth=3, alpha=0.4)
+
+            #plt.xlim(xlim)
+            #plt.ylim(ylim)
+
     plt.text(df[col1][3], df[col2][3]*0.97, df.index.values[3])
     plt.text(df[col1][6], df[col2][6]*0.97, df.index.values[6])
     plt.text(df[col1][0]*0.98,df[col2][0]*1.05,df.index.values[0])
@@ -392,6 +404,8 @@ def plot_df(df,col1,col2,plotline=False,linear = False):
     plt.text(df[col1][9]*0.95, df[col2][9] * 0.95, df.index.values[9])
     #plt.text(df[col1] + 0.02, df[col2] - 0.02, df.index.values, size=10, alpha=0.7)
 
+
+    plt.grid()
     if linear:
         reg_EF = linear_model.LinearRegression()
         #a= (1,2,3)
@@ -412,17 +426,180 @@ def plot_df(df,col1,col2,plotline=False,linear = False):
         EF_slope = round(reg_EF.coef_[0][0],3)
         NRM_slope = round(reg_NRM.coef_[0][0],3)
 
-        x_EF_test = np.array( [-0.002, 0.004] ).reshape(-1,1)
+        x_EF_test = np.array( [x_inter[0],x_inter[1]] ).reshape(-1,1)
         y_EF_test_hat = reg_EF.predict(np.array(x_EF_test))
-        x_NRM_test = np.array( [ -0.002, 0.004  ]  ).reshape(-1, 1)
+        x_NRM_test = np.array( [ x_inter[0],x_inter[1] ]  ).reshape(-1, 1)
 
         y_NRM_test_hat = reg_NRM.predict(np.array(x_NRM_test))
-        plt.text(x_EF_test[-1],y_EF_test_hat[-1],'k= '+ str(EF_slope)+',R^2='+str(r2_EF))
-        plt.text(x_NRM_test[-1], y_NRM_test_hat[-1], 'k= ' + str(NRM_slope)+',R^2='+ str(r2_NRM))
+        plt.text(x_EF_test[-1],y_EF_test_hat[-1],'k= '+ str(EF_slope)+', R2='+str(r2_EF))
+        plt.text(x_NRM_test[-1], y_NRM_test_hat[-1], 'k= ' + str(NRM_slope)+', R2='+ str(r2_NRM))
         plt.plot(x_EF_test, y_EF_test_hat,'r-',linewidth=2)
         plt.plot(x_NRM_test, y_NRM_test_hat, 'g-',linewidth=2)
+    #plt.grid
+
+# ----- plot the mineral composition bar
+def plot_mineral_bar(df,keys =['Calcite','Illite/Mica','Mx I/S*','quartz','Plagioclase','Pyrite'],save =False):
+    import operator
+
+    #file_prechar ='C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_N2_triaxial/precharacterization_data.xlsx'
+    #df_xrd = pd.read_excel(file_prechar,sheetname='xrd')
 
 
+    fig,axis = plt.subplots(1,1,figsize=(14,10))
+
+    width =0.8
+    ind = np.arange(8)
+        #print(data_micro,data_meso)
+    #
+    #keys = ['Calcite']
+    #keys = ['Calcite','clay_total']
+    rects = []
+    bottom = tuple([0]*8)
+    print(bottom)
+    color_names = [ 'orange', 'crimson', 'darkorchid', 'g', 'b', 'black','sienna', 'grey']
+    for i,key in enumerate(keys):
+        print(i)
+        if i > 0:
+            a = tuple((df[keys[i - 1]][0:8]))
+            bottom = tuple(map(operator.add, a, bottom))
+        rect = axis.bar(ind,df[key][0:8],width,bottom=bottom,color=color_names[i])
+        rects.append(rect)
+    # add 'other' as the last mineral
+    a = tuple((df[keys[-1]][0:8]))
+    bottom = tuple(map(operator.add, a, bottom))
+    rect = axis.bar(ind,100 - np.array(bottom),width,bottom=bottom,color=color_names[i+1])
+    rects.append(rect)
+        #if key == 'other':
+            #rect = axis.bar(ind, df_xrd['quartz'][0:8], width, bottom=bottom, color=colors[i])
+            #b  = np.array([100]*8) - np.array(bottom)
+            #print(0)
+            #rect = axis.bar(ind, np.array([100]*8)--, width, bottom=bottom, color=colors[i])
+
+        #print('a',a)
+
+        #print('bottom',bottom)
+
+        #axies[ax_0,ax_1].set_ylim([0, 0.04])
+        #axies[ax_0,ax_1].set_title(core_name)
+
+        #plt.title('pore_'+core_name)
+        #plt.xticks(ind+width/2,xticklabel)
+    plt.setp(axis,xticks=ind+width/2,xticklabels=df['core_name'][0:8])
+        #axies[ax_0,ax_1].set_xticks(xticklabel)
+    keys.append('other')
+    #axis.legend(rects,keys,fancybox=True, )
+    box = axis.get_position()
+    axis.set_position([box.x0, box.y0 + box.height * 0.1,
+                     box.width, box.height * 0.9])
+
+    # Put a legend below current axis
+    plt.ylabel('weight percentage (%)')
+    axis.legend(rects,keys,loc='upper center', bbox_to_anchor=(0.5, -0.05),
+              fancybox=True, shadow=True, ncol=8,framealpha=1)
+    #plt.legend()
+        #figure = plt.figure(core_name)
+    # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
+    #plt.setp([a.get_xticklabels() for a in axies[0, :]], visible=False)
+    #for k in range(1,4):
+        #plt.setp([a.get_yticklabels() for a in axies[:, k]], visible=False)
+    #plt.tight_layout()
+    #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    plt.show()
+
+#---- plot BET C value
+def plot_BET_constant(df,col):
+    a = np.arange(8)
+    fig,ax = plt.subplots()
+    ax.plot(a[:3],df[col][:3],'ro',markersize=10,alpha=0.8)
+    ax.plot([-1, 8], [100, 100], 'k--', linewidth=1)
+    ax.plot([-1,8],[0,0],'k--',linewidth=1)
+    ax.plot(a[3:8], df[col][3:8], 'go',markersize=10,alpha=0.8)
+    #ax.set_yscale('symlog')
+    plt.xlim([-0.5,7.5])
+    plt.ylim([-800,600])
+    plt.show()
+
+
+#---------- plot full isotherm
+def plot_full_N2_isotherm():
+    direct = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_N2_triaxial/'
+    filename = direct + 'isotherm_N2.xlsx'
+    df_3_53 = pd.read_excel(filename,sheetname = '3_53')
+    df_1_223 = pd.read_excel(filename,sheetname = '1_223')
+    plt.figure()
+    #plt.plot(df_3_53['p'][0:30],df_3_53['q'][0:30],'ro-',markersize=10)
+    #plt.plot(df_3_53['p'][29:],df_3_53['q'][29:],'ro-',markersize=10,alpha=0.5)
+
+    l2,=plt.plot(df_3_53['p'][29:], df_3_53['q'][29:], 'go-',markersize=10,linewidth=1)
+    l1, = plt.plot(df_3_53['p'][:30], df_3_53['q'][:30], 'ro-', markersize=10, linewidth=1)
+    plt.legend([l1, l2], ['adsorption', 'desorption'],loc=2)
+    plt.title('3_53')
+    plt.xlabel('relative pressure (p/p0)')
+    plt.ylabel('adsorption quantity (cm3/g)')
+    plt.xlim(-0.05, 1.05)
+    plt.ylim(-0.5, 16)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.show()
+
+    plt.figure()
+    #fig, ax = plt.subplots()
+    l2,=plt.plot(df_1_223['p'][27:], df_1_223['q'][27:], 'go-',linewidth=1,markersize=10,label='desorption')
+    l1, = plt.plot(df_1_223['p'][:28], df_1_223['q'][:28], 'ro-', linewidth=1, markersize=10, label='adsorption')
+    #plt.scatter(df_1_223['p'][:28], df_1_223['q'][:28], s=80, facecolors='g', edgecolors='g', linewidths=1)
+    #plt.scatter(df_1_223['p'][27:], df_1_223['q'][27:], s=80, facecolors='none', edgecolors='g', linewidths=1)
+    #plt.scatter(df_3_53['p'][29:], df_3_53['q'][29:], s=80, facecolors='none', edgecolors='r', linewidths=1)
+    #print(df_1_223['p'][27])
+    #plt.plot(,'ro-',markersize=10,alpha=0.5)
+    #q1 =
+    #print(p1[29])
+    plt.title('1_223',fontsize=16)
+    plt.xlabel('relative pressure (p/p0)',fontsize=16)
+    plt.ylabel('adsorption quantity (cm3/g)',fontsize=16)
+    plt.xlim(-0.05,1.05)
+    plt.ylim(-0.5,12)
+    plt.legend([l1,l2],['adsorption','desorption'],loc=2)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.show()
+
+def plot_full_CO2_isotherm():
+    direct = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_N2_triaxial/'
+    filename = direct + 'isotherm_co2.xlsx'
+    df_3_53 = pd.read_excel(filename, sheetname='3_53')
+    df_1_223 = pd.read_excel(filename, sheetname='1_223')
+
+    plt.figure()
+    l1, = plt.plot(df_3_53['p'], df_3_53['q'], 'ro-', linewidth=1, markersize=10, label='adsorption')
+    plt.legend([l1], ['adsorption'], loc=4)
+    plt.title('3_53', fontsize=16)
+    plt.xlabel('relative pressure (p/p0)', fontsize=16)
+    plt.ylabel('adsorption quantity (cm3/g)', fontsize=16)
+    plt.xlim(-0.0005,0.025)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.show()
+
+    plt.figure()
+    l1, = plt.plot(df_1_223['p'], df_1_223['q'], 'ro-', linewidth=1, markersize=10, label='adsorption')
+    plt.legend([l1], ['adsorption'], loc=4)
+    plt.title('1_223', fontsize=16)
+    plt.xlabel('relative pressure (p/p0)', fontsize=16)
+    plt.ylabel('adsorption quantity (cm3/g)', fontsize=16)
+    plt.xlim(-0.0005,0.025)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.show()
+
+def plot_fractal_dimension_method(iso):
+    p = iso['3_53']['In_1']['p_ads']
+    q = iso['3_53']['In_1']['q_ads']
+    get_fractal_number(p, q, do_plot=True)
+
+def plot_BET_surface(iso):
+    p  = iso['3_53']['In_1']['p_ads']
+    q  = iso['3_53']['In_1']['q_ads']
+    get_BET_surface(p,q,do_plot=True)
 
 #--------------- calculation
 def get_porosity_ratio_all_sample_BJH(iso,core_names_select,sample_names_select):
@@ -475,11 +652,47 @@ def get_porosity_ratio_all_sample_3flex(iso,core_names_select,sample_names_selec
     #plt.show()
     return ratio_mesos,ratio_micros,ratio_totals
 
-def get_all_fractal_number(iso):
-    pass
+def save_fractal_number(iso,core_names,sample_names,do_save=False):
+    # to save the fractal number into dataframe after iso
+
+    data = {}
+    data['name_core']=[]
+    data['name_sample']=[]
+    data['D11']=[]
+    data['D12'] = []
+    data['D21'] = []
+    data['D22'] = []
+    data['k1'] = []
+    data['k2'] = []
+    data['r2_1'] = []
+    data['r2_2'] = []
+    key1 = ['D11','D12','k1','r2_1']
+    key2 = ['D21','D22','k2','r2_2']
+    #core_name = '3_42'
+    #sample_name = 'In_2'
+    for i, core_name in enumerate(core_names):
+        for sample_name in sample_names[i]:
+            data['name_core'].append(core_name)
+            data['name_sample'].append(sample_name)
+            fractal_1 = iso[core_name][sample_name]['fractal_1']
+            fractal_2 = iso[core_name][sample_name]['fractal_2']
+            for key in key1:
+                data[key].append(fractal_1[key])
+            for key in key2:
+                data[key].append(fractal_2[key])
+            #data.update(fractal_2)
+            #print(fractal_1)
+    df = pd.DataFrame(data=data)
+    print(df)
+    if do_save:
+        df.to_csv(iso['direct']+'fractal.csv',index=False)
+
+
+
+
 
 def get_fractal_number(p,q,do_plot=False):
-     ind1 = ( p <= 0.45 ) & ( p > 0.036148)
+     ind1 = ( p <= 0.45 ) & ( p > 0.05)
      ind2 = (p > 0.45) #& (p < 0.993284)
      p1 = p[ind1]
      q1 = q[ind1]
@@ -507,26 +720,77 @@ def get_fractal_number(p,q,do_plot=False):
      r2_2 = round(r2_score(y2, reg_2.predict(x2)), 4)
      k2 = round(reg_2.coef_[0][0], 4)
 
-     x2_test = x2[np.r_[0,-1]]
+     x2_test = x2[np.r_[0, -1]]
      y2_hat = reg_2.predict(x2_test)
 
-     Dzone2_1 = 3*k2+3
-     Dzone2_2 = k2+3
-     Dzone1_1 = 3*k1+3
-     Dzone1_2 = k1+3
-     print(Dzone2_1,Dzone2_2,r2_2)
-     print(Dzone1_1,Dzone1_2,r2_1)
+    # zone 2 is for p/p0 > 0.45
+     Dzone2_1 = round(3*k2+3,4)
+     Dzone2_2 = round(k2+3,4)
+     # zone 1 is for p/p0 <= 0.45
+     Dzone1_1 = round(3*k1+3,4)
+     Dzone1_2 = round(k1+3,4)
+     #print(Dzone2_1,Dzone2_2,r2_2)
+     #print(Dzone1_1,Dzone1_2,r2_1)
 
      if do_plot:
-        print(k2,r2_2)
-        print(k1, r2_1)
+        #print(k2,r2_2)
+        #print(k1, r2_1)
         figure = plt.figure()
-        plt.plot(x2,y2,'ro')
-        plt.plot(x1, y1, 'go')
-        plt.plot(x2_test,y2_hat,linewidth=2)
-        plt.plot(x1_test, y1_hat,linewidth=2)
-
+        plt.plot(x2,y2,'ro',markersize = 10)
+        plt.plot(x1, y1, 'go',markersize=10)
+        plt.plot(x2_test,y2_hat,'k',linewidth=2)
+        plt.plot(x1_test, y1_hat,'k',linewidth=2)
+        plt.plot([-.22501, -.22501], [0, 3],'k--',linewidth=3)
+        plt.xlabel('ln(ln(p0/p))')
+        plt.ylabel('ln(V)')
+        plt.title('Fractal FFH method')
         plt.show()
+
+     fractal_zone2={}
+     fractal_zone2['D21']= Dzone2_1
+     fractal_zone2['D22'] = Dzone2_2
+     fractal_zone2['k2'] = k2
+     fractal_zone2['r2_2'] = r2_2
+
+     fractal_zone1 = {}
+     fractal_zone1['D11'] = Dzone1_1
+     fractal_zone1['D12'] = Dzone1_2
+     fractal_zone1['k1'] = k1
+     fractal_zone1['r2_1'] = r2_1
+
+     return fractal_zone1,fractal_zone2
+
+
+def get_BET_surface(p,q,do_plot=False):
+    # has some problem
+    ind = (p >= 0.05) & ( p <= 0.35 )
+    p1 = p[ind]
+    q1 = q[ind]
+    reg = linear_model.LinearRegression()
+    x_train =  np.array(p1).reshape(-1,1)
+    y_train =  np.array( 1.0/(q1*(1/p1) -1 )  ).reshape(-1,1)
+    reg.fit(x_train, y_train)
+
+    x_test = x_train[np.r_[0, -1]]
+    y_hat = reg.predict(x_test)
+    slope = round(reg.coef_[0][0], 4) # slope
+    intersect =  reg.intercept_[0]
+    BET_const = 1 + slope/intersect
+    BET_Qm = 1/( BET_const*intersect)
+    print(slope,intersect)
+    print(BET_Qm,BET_const)
+    if do_plot:
+        # print(k2,r2_2)
+        # print(k1, r2_1)
+        figure = plt.figure()
+        plt.plot(x_train, y_train, 'go', markersize=10)
+        plt.plot(x_test, y_hat, 'k', linewidth=2)
+        #plt.plot([-.22501, -.22501], [0, 3], 'k--', linewidth=3)
+        plt.xlabel('p/p0')
+        plt.ylabel('1/ q(po/p-1)')
+        plt.title('BET surface area')
+        plt.show()
+
 
 
 
