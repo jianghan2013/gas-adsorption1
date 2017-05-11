@@ -1,12 +1,11 @@
-import matplotlib.pyplot as plt
-import numpy as np
-#plt.style.use('ggplot')
-import pandas as pd
+import matplotlib
+from visualization import co2_plot
 from visualization import N2_plot
-from sklearn import linear_model
-
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 #------------- main function
-
+# this is for the paper
 
 direct = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_N2_triaxial/'
 
@@ -174,10 +173,10 @@ ratio_BET = BET_select_1[:,0] / BET_select_1[:,1]
 
 #direct_co2 = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_CO2_trixial/'
 
-iso = N2_plot.iso_reading_N2(direct,core_names,sample_names)
+iso = N2_plot.iso_reading_N2(direct,core_names_select_1,sample_names_select_1)
 #N2_plot.plot_fractal_dimension_method(iso)
-f1 = iso['3_42']['In_2']['fractal_1']
-f2 = iso['3_42']['In_2']['fractal_2']
+#f1 = iso['3_42']['In_2']['fractal_1']
+#f2 = iso['3_42']['In_2']['fractal_2']
 #N2_plot.save_fractal_number(iso,core_names_select_1,sample_names_select_1,True)
 #f1,f2 = N2_plot.get_fractal_number(p,q,True)
 #print(f1)
@@ -194,7 +193,7 @@ df_kerogen = pd.read_excel(file_prechar,sheetname='kerogen_porosity')
 file_post = 'C:/Users/hj5446/Dropbox/adsorption_toolbox/from_git/gas-adsorption1/Data_N2_triaxial/post_data.xlsx'
 df_BET =  pd.read_excel(file_post,sheetname='BET')
 #df_BET['diff'] = df_BET['F']- df_BET['In']
-#N2_plot.plot_mineral_bar(df_xrd)
+
 df_N2_total =  pd.read_excel(file_post,sheetname='N2_total')
 df_N2_meso =  pd.read_excel(file_post,sheetname='N2_meso')
 df_micro =  pd.read_excel(file_post,sheetname='micro')
@@ -213,9 +212,10 @@ df_BET_C = pd.read_excel(file_post,sheetname='BET_C')
 
 
 
-print(df_fractal)
+#print(df_fractal)
 id0 = 0
 id1 = 10
+
 df_compare = pd.DataFrame(data={
                                 '1r_micro':np.array(df_micro['ratio'])[id0:id1],
                                 '1r_N2_meso':np.array(df_N2_meso['ratio'])[id0:id1],
@@ -261,16 +261,152 @@ colors = ['g','g','g',
 
 #N2_plot.plot_df(df_compare,'fractal_In_D12','fractal_diff_D12',linear = False,xlim=[2.3,2.7,0],ylim=[-0.03,0.06,None])
 #--------- checking list ------------------
-#N2_plot.plot_df(df_compare,'1r_N2_meso','1r_micro',xlim=[0.6,1.8,1.0],ylim=[0.6,1.8,1.0],linear = False)
-#N2_plot.plot_df(df_compare,'1r_BET','1r_micro',xlim=[0.8,1.6,1.0],ylim=[0.8,1.6,1.0],linear = True,x_inter=[0.9,1.3])
-#N2_plot.plot_df(df_compare,'1r_BET','1r_N2_meso',xlim=[0.8,1.6,1.0],ylim=[0.8,1.6,1.0],linear = True,x_inter=[0.9,1.3])
+
+
+#N2_plot.plot_mineral_bar(df_xrd)
+#N2_plot.plot_mineral_bar(df_xrd)
+params = {
+   'axes.labelsize': 20,
+   'font.size': 25,
+   'legend.fontsize': 20,
+   'xtick.labelsize': 20,
+   'ytick.labelsize': 20,
+   'text.usetex': False,
+   'figure.figsize': [14, 18],
+   }
+matplotlib.rcParams.update(params)
+#N2_plot.plot_isotherm_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,save=False)
+#plt.show()
+#N2_plot.plot_psd_per_core_in_one_figure(iso,core_names_select_1,sample_names_select_1,save=False)
+
+params = {
+   'axes.labelsize': 27,
+   'font.size': 27,
+   'legend.fontsize': 27,
+   'xtick.labelsize': 27,
+   'ytick.labelsize': 27,
+   'lines.markersize' : 15,
+   'text.usetex': False,
+   'figure.figsize': [16, 10],
+   }
+matplotlib.rcParams.update(params)
+#N2_plot.plot_BET_surface_bar(df_BET)
+
+#-----------------------------------------------------------------
+# for comprasion micro and meso porosity
+params = {
+   'axes.labelsize': 27,
+   'font.size': 27,
+   'legend.fontsize': 27,
+   'xtick.labelsize': 27,
+   'ytick.labelsize': 27,
+   'lines.markersize' : 15,
+   'text.usetex': False,
+   'figure.figsize': [16, 10],
+   }
+matplotlib.rcParams.update(params)
+#N2_plot.plot_df(df_compare,'1r_N2_meso','1r_micro',xlim=[0.7,1.8,1.0],ylim=[0.7,1.8,1.0],xylabel=['Failed Pore Volume  / Intact Pore Volume ($\geqslant$2nm)','Failed Pore Volume / Intact Pore Volume  (<2nm)'],linear = False)
+
+#plt.plot([1.25,1.18],[1.18,1.22],'k')
+#plt.plot([1.25,1.15],[1.16,1.15],'k')
+#plt.text(1.26,1.16,'EF_1_223')
+#plt.plot([1.25,1.13],[1.02,1.063],'k')
+#plt.plot([1.25,1.2],[1.02,1.07],'k')
+#plt.text(1.26,1.02,'NMR_3_53')
+#plt.show()
+
+#-------------------- surface area
+
+#ax.arrow(1.3,1.2,1.3,1.25, fc='k', ec='k')
+params = {
+   'axes.labelsize': 35,
+   'font.size': 30,
+   'legend.fontsize': 35,
+   'xtick.labelsize': 32,
+   'ytick.labelsize': 32,
+   'text.usetex': False,
+   'figure.figsize': [15, 14],
+   }
+matplotlib.rcParams.update(params)
+#N2_plot.plot_df(df_compare,'1r_BET','1r_N2_meso',xlim=[0.8,1.8,1.0],ylim=[0.8,1.6,1.0],xylabel=['Failed surface area / Intact surface area ','Failed Pore Volume / Intact Pore Volume  ($\geqslant$2nm)'],linear = True,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'1r_BET','1r_micro',xlim=[0.8,1.8,1.0],ylim=[0.8,1.8,1.0],xylabel=['Failed surface area / Intact surface area ','Failed Pore Volume / Intact Pore Volume  (<2nm)'],linear = True,x_inter=[0.9,1.3])
+
+#----------------------
+
+
+
+# fractal
+params = {
+   'axes.labelsize': 35,
+   'font.size': 35,
+   'legend.fontsize': 35,
+   'xtick.labelsize': 32,
+   'ytick.labelsize': 32,
+   'text.usetex': False,
+   'figure.figsize': [12, 14],
+   }
+matplotlib.rcParams.update(params)
+#N2_plot.plot_df(df_compare,'fractal_In_D22','1r_micro',xlim=[2.62,2.72,1.0],ylim=[0.8,1.8,None],xylabel=['Fractal dimension','Failed Pore Volume / Intact Pore Volume  (<2nm)'],linear = False,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'fractal_In_D22','1r_N2_meso',xlim=[2.62,2.72,1.0],ylim=[0.8,1.6,None],xylabel=['Fractal dimension','Failed Pore Volume / Intact Pore Volume  ($\geqslant$2nm)'],linear = False,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'fractal_In_D22','1r_BET',xlim=[2.62,2.72,1.0],ylim=[0.8,1.5,None],xylabel=['Fractal dimension','Failed surface area/ Intact surface area '],linear = False,x_inter=[0.9,1.3])
+
+##---- minerology
+params = {
+   'axes.labelsize': 35,
+   'font.size': 35,
+   'legend.fontsize': 38,
+   'xtick.labelsize': 32,
+   'ytick.labelsize': 32,
+   'lines.markersize': 20,
+   'text.usetex': False,
+    'legend.fontsize':35,
+   'figure.figsize': [13, 15],
+   }
+matplotlib.rcParams.update(params)
+
+
+#-------clay + TOC for meso porosity
+#N2_plot.plot_df(df_compare,'toc','1r_N2_meso',xlim=[2.5,5.0,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of TOC (wt. %)','Failed Pore Volume / Intact Pore Volume  ($\geqslant$2nm)'])
+#N2_plot.plot_df(df_compare,'clay','1r_N2_meso',xlim=[10,45,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of clay (wt. %)','Failed Pore Volume / Intact Pore Volume  ($\geqslant$2nm)'])
+#N2_plot.plot_df(df_compare,'clay+toc','1r_N2_meso',xlim=[15,50,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of clay plus TOC (wt. %)','Failed Pore Volume / Intact Pore Volume  ($\geqslant$2nm)'])
+
+#----  clay +TOC for micro porosity
+#N2_plot.plot_df(df_compare,'toc','1r_micro',xlim=[2.5,5.0,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of  TOC (wt. %)','Failed Pore Volume / Intact Pore Volume  (<2nm)'])
+#N2_plot.plot_df(df_compare,'clay','1r_micro',xlim=[10,45,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of clay (wt. %)','Failed Pore Volume / Intact Pore Volume  (<2nm)'])
+#N2_plot.plot_df(df_compare,'clay+toc','1r_micro',xlim=[15,50,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of clay plus TOC (wt. %)','Failed Pore Volume / Intact Pore Volume  (<2nm)'])
+
+#----  clay +TOC for surface area
+#N2_plot.plot_df(df_compare,'toc','1r_BET',xlim=[2.5,5.0,1.0],ylim=[0.8,1.5,None],xylabel=['Concentration of  TOC (wt. %)','Failed surface area / Intact surface area '])
+#N2_plot.plot_df(df_compare,'clay','1r_BET',xlim=[10,45,1.0],ylim=[0.8,1.5,None],xylabel=['Concentration of  clay (wt. %)','Failed surface area / Intact surface area '])
+N2_plot.plot_df(df_compare,'clay+toc','1r_BET',xlim=[15,50,1.0],ylim=[0.8,1.6,None],xylabel=['Concentration of  clay plus TOC (wt. %)','Failed surface area / Intact surface area '])
+
+plt.show()
+
+##-- Tmax
+params = {
+   'axes.labelsize': 35,
+   'font.size': 35,
+   'legend.fontsize': 35,
+   'xtick.labelsize': 32,
+   'ytick.labelsize': 32,
+   'text.usetex': False,
+   'figure.figsize': [14, 12],
+   }
+matplotlib.rcParams.update(params)
+
+#N2_plot.plot_df(df_compare,'Tmax','fractal_In_D22',xlim=[440,465,None],ylim=[2.62,2.72,None],xylabel=['Tmax ($^o $C)','Fractal dimension'],linear = False,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'Tmax','1r_N2_meso',xlim=[440,465,1.0],ylim=[0.8,1.6,None],xylabel=['Tmax ($^o $C)','Failed Pore Volume / Intact Pore Volume  ($\geqslant$2nm)'],linear = False,x_inter=[0.9,1.3])
+#N2_plot.plot_df(df_compare,'Tmax','1r_micro',xlim=[440,465,1.0],ylim=[0.8,1.8,None],xylabel=['Tmax ($^o $C)','Failed Pore Volume / Intact Pore Volume  (<2nm)'],linear = False,x_inter=[0.9,1.3])
+
+
 #N2_plot.plot_df(df_compare,'BET_diff','micro_diff',xlim=[-2,4,0],ylim=[-0.0005,0.0012,0],linear = True,x_inter=[-1,2.5])
 #N2_plot.plot_df(df_compare,'BET_diff','N2_meso_diff',xlim=[-2,4,0],ylim=[-0.0005,0.0012,0],linear = True,x_inter=[-1,2.5])
 #N2_plot.plot_df(df_compare,'fractal_diff_D12','fractal_diff_D22',xlim=[-0.02,0.06,0],ylim=[-0.02,0.04,0],linear = False,x_inter=[-1,2.5])
 #N2_plot.plot_df(df_compare,'fractal_diff_D12','1r_micro',xlim=[-0.02,0.06,None],ylim=[-0.02,0.04,None],linear = False,x_inter=[-0.01,0.015])
-N2_plot.plot_df(df_compare,'1r_N2_meso','toc',xlim=[-0.02,0.06,None],ylim=[-0.02,0.04,None],linear = False,x_inter=[-0.01,0.015])
+#N2_plot.plot_df(df_compare,'1r_N2_meso','toc',xlim=[-0.02,0.06,None],ylim=[-0.02,0.04,None],linear = False,x_inter=[-0.01,0.015])
 #plt.grid
-plt.show()
+#plt.show()
+#------------------------------------------------------------------------
 
 #N2_plot.plot_df(df_compare,'kerogen_total','fractal_diff_D22',xlim=[2.3,2.7,None],ylim=[-0.03,0.06,None],linear = False)
 #N2_plot.plot_df(df_compare,'fractal_diff_D22','fractal_diff_D12',plotline=True,linear = False,xlim=[-0.02,0.03],ylim=[-0.03,0.06],base=0)

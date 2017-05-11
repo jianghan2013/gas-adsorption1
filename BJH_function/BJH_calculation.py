@@ -85,7 +85,7 @@ def use_my_pressure_points(p_raw,q_raw,gas_type):
 def get_porosity(p_raw,q_raw,gas_type='N2'):
     '''
     calculate the porosity of total, meso and micro
-
+    the total porososity is corresponding to total volume of radius <= 160nm
     :param p: relative pressure points
     :param q: adsorption amount
     :param gas_type: type of gas

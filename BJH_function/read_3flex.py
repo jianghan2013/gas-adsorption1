@@ -28,9 +28,13 @@ class file_3flex():
             dataframe = pd.DataFrame(data={'p_ads':self.p_ads,'q_ads':self.q_ads})
         elif type =='des':
             dataframe = pd.DataFrame(data={'p_des': self.p_des, 'q_des': self.q_des})
-        else:
+        elif type == 'full':
             dataframe = pd.DataFrame(data={'p': self.p, 'q': self.q})
-        dataframe.to_csv(self.direct + 'ISO_'+ filename, index=False)
+        # save the file
+        if type == 'ads':
+            dataframe.to_csv(self.direct + 'ISO_'+filename, index=False)
+        else:
+            dataframe.to_csv(self.direct + 'ISO_' + type+ '_'+ filename, index=False)
 
     def psd_3flex_to_csv(self,filename='new.csv'):
         dataframe = pd.DataFrame(data={'Davg_3flex': self.Davg_3flex, 'Vp_3flex': self.Vp_3flex,
@@ -145,21 +149,25 @@ if __name__ == '__main__':
     # read the direct list information
     pd_direct = pd.read_excel(filename,'direct')
 
-    i = 1
-    core_name = pd_direct['core_name'][i]
+    for i in range(8):
+        core_name = pd_direct['core_name'][i]
+        print('----core_name',core_name)
 
 
-    # go into subfolder directory
-    pd_file = pd.read_excel(filename, core_name)
-    root_direct1 = root_direct + pd_direct['direct'][i]
-    for ind,infile in enumerate(pd_file['input_file']):
-        outfile = pd_file['output_file'][ind]
-        print(i,infile)
-        my_file = file_3flex(filename = infile, direct = root_direct1)
-        my_file.get_iso()
-        my_file.get_psd_dft_3flex()
-        my_file.iso_to_csv(outfile)
-        my_file.psd_3flex_to_csv(outfile)
+        # go into subfolder directory
+        pd_file = pd.read_excel(filename, core_name)
+        root_direct1 = root_direct + pd_direct['direct'][i]
+        for ind,infile in enumerate(pd_file['input_file']):
+            outfile = pd_file['output_file'][ind]
+            print(i,infile)
+            my_file = file_3flex(filename = infile, direct = root_direct1)
+            my_file.get_iso()
+            my_file.get_psd_dft_3flex()
+
+            # save to file
+            my_file.iso_to_csv(outfile,type='ads')
+            my_file.iso_to_csv(outfile, type='full')
+            my_file.psd_3flex_to_csv(outfile)
     #print(iso_file_direct)
 
     '''
