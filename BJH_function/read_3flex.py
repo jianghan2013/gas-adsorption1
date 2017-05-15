@@ -149,7 +149,7 @@ if __name__ == '__main__':
     # read the direct list information
     pd_direct = pd.read_excel(filename,'direct')
 
-    for i in range(8):
+    for i in range(3):
         core_name = pd_direct['core_name'][i]
         print('----core_name',core_name)
 

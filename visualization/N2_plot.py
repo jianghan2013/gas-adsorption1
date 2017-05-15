@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 #plt.style.use('ggplot')
 from sklearn import linear_model
 from sklearn.metrics import r2_score, mean_absolute_error
-
+from BJH_function import std_slope  # linear fit model
 
 
 
@@ -63,7 +63,7 @@ def iso_reading_N2(direct,core_names,sample_names):
             iso[core_name][sample_name]['Vp_dlogD'] = psd.Vp_dlogD
 
             # do fractal number
-            fractal_1, fractal_2 = get_fractal_number(p_ads, q_ads, False)
+            fractal_1, fractal_2 = get_fractal_number(p_ads, q_ads, do_plot=False)
             iso[core_name][sample_name]['fractal_1'] = fractal_1
             iso[core_name][sample_name]['fractal_2'] = fractal_2
 
@@ -445,9 +445,9 @@ def plot_df(df,col1,col2,xlim=[0.8,1.8,1],ylim=[0.6,1.8,1],linear = False,x_inte
         plt.plot([xlim[0], xlim[1]], [xlim[2], xlim[2]], 'k--', linewidth=3, alpha=0.4)
 
 
-
-    plt.xlim(xlim[0:2])
-    plt.ylim(ylim[0:2])
+    if xlim[0] is not None:
+        plt.xlim(xlim[0:2])
+        plt.ylim(ylim[0:2])
 
     #plt.text(df[col1][3], df[col2][3], df.index.values[3])
     #plt.text(df[col1][6], df[col2][6], df.index.values[6])
@@ -489,6 +489,7 @@ def plot_df(df,col1,col2,xlim=[0.8,1.8,1],ylim=[0.6,1.8,1],linear = False,x_inte
         plt.plot(x_EF_test, y_EF_test_hat,'r-',linewidth=2)
         plt.plot(x_NRM_test, y_NRM_test_hat, 'g-',linewidth=2)
     #plt.grid
+    plt.show()
 
 # ----- plot the mineral composition bar
 def plot_mineral_bar(df,keys =['calcite','illite/mica','mixture illite/smectite','quartz','plagioclase','pyrite'],save =False):
@@ -722,62 +723,73 @@ def save_fractal_number(iso,core_names,sample_names,do_save=False):
 
 
 
-def get_fractal_number(p,q,do_plot=False):
+def get_fractal_number(p,q,p1_end=[0.05,0.45],p2_end=[0.45,1.0],do_plot=False):
     '''
 
 
     :param p: adsorption branch
     :param q: adsorption branch
+    :param p1_end: end point for fractal 1 interval
+    :param p2_end: end point for fractal 2 interval
     :param do_plot:
     :return: fractal 1: p <  0.45
             fractal 2: p >0.45
     '''
-    ind1 = ( p <= 0.45 ) & ( p > 0.05)
-    ind2 = (p > 0.45)  # & (p < 0.993284)
+
+    # select the pressure range
+    ind1 = ( p <= p1_end[1] ) & ( p > p1_end[0])
+    ind2 = (p > p2_end[0])  & (p < p2_end[1])
+
+    # select the pressure and quantity in that range
     p1 = p[ind1]
     q1 = q[ind1]
     p2 = p[ind2]
     q2 = q[ind2]
 
-    # 1
-    reg_1 = linear_model.LinearRegression()
+    # prepare for x and y
+    #reg_1 = linear_model.LinearRegression()
     x1 = np.log(np.log(1 / p1)).reshape(-1, 1)
     y1 = np.log(q1).reshape(-1, 1)
-
-    reg_1.fit(x1, y1)
-    r2_1 = round(r2_score(y1, reg_1.predict(x1)), 4)
-    mabs_error_1 = round(mean_absolute_error(y1, reg_1.predict(x1)), 4)
-    k1 = round(reg_1.coef_[0][0], 4)
-
-    x1_test = x1[np.r_[0, -1]]
-    y1_hat = reg_1.predict(x1_test)
-
-    # 2
-    reg_2 = linear_model.LinearRegression()
     x2 = np.log(np.log(1 / p2)).reshape(-1, 1)
     y2 = np.log(q2).reshape(-1, 1)
 
-    reg_2.fit(x2, y2)
-    r2_2 = round(r2_score(y2, reg_2.predict(x2)), 4)
-    mabs_error_2 = round(mean_absolute_error(y2, reg_2.predict(x2)), 4)
-    k2 = round(reg_2.coef_[0][0], 4)
+    # model fitting
+    my_model1 = std_slope.get_linear_model(x1, y1)
+    my_model1.linear_fit()
 
-    x2_test = x2[np.r_[0, -1]]
-    y2_hat = reg_2.predict(x2_test)
+    my_model2 = std_slope.get_linear_model(x2, y2)
+    my_model2.linear_fit()
 
-    # zone 2 is for p/p0 > 0.45
-    Dzone2_1 = round(3 * k2 + 3, 4)
-    Dzone2_2 = round(k2 + 3, 4)
-    # zone 1 is for p/p0 <= 0.45
+    # get fractal dimension coefficients
+    k1 = round(my_model1.coeffs['slope'], 4)
+    k2 = round(my_model2.coeffs['slope'], 4)
+
     Dzone1_1 = round(3 * k1 + 3, 4)
     Dzone1_2 = round(k1 + 3, 4)
-    # print(Dzone2_1,Dzone2_2,r2_2)
-    # print(Dzone1_1,Dzone1_2,r2_1)
+    Dzone2_1 = round(3 * k2 + 3, 4) # zone 2 dimension 1 fractal dimension zone 2 is for p/p0 > 0.45
+    Dzone2_2 = round(k2 + 3, 4) # zone 2 dimension 2
+
+    # get accuracy coefficients R2 and standard error of slope
+    R2_1 = round(my_model1.coeffs['R2'], 4)
+    R2_2 = round(my_model2.coeffs['R2'], 4)
+    SE_D22 = round(my_model2.coeffs['standard_error_slope'], 4)
+    SE_D21 = round(my_model2.coeffs['standard_error_slope'], 4)*3
+
+    SE_D12 = round(my_model1.coeffs['standard_error_slope'], 4)
+    SE_D11 = round(my_model1.coeffs['standard_error_slope'], 4) * 3
+
+
+    # for plotting
 
 
     if do_plot:
         # print(k2,r2_2)
         # print(k1, r2_1)
+        x1_test = x1[np.r_[0, -1]]
+        y1_hat = my_model1.regression_model.predict(x1_test)
+        x2_test = x2[np.r_[0, -1]]
+        y2_hat = my_model2.regression_model.predict(x2_test)
+
         figure = plt.figure()
         plt.plot(x2, y2, 'ro', markersize=10)
         plt.plot(x1, y1, 'go', markersize=10)
@@ -789,19 +801,22 @@ def get_fractal_number(p,q,do_plot=False):
         plt.title('Fractal FFH method')
         plt.show()
 
+    # output results
     fractal_zone2 = {}
     fractal_zone2['D21'] = Dzone2_1
     fractal_zone2['D22'] = Dzone2_2
     fractal_zone2['k2'] = k2
-    fractal_zone2['r2_2'] = r2_2
-    fractal_zone2['mabs_error_2'] = mabs_error_2
+    fractal_zone2['R2_2'] = R2_2
+    fractal_zone2['SE_D22'] = SE_D22
+    fractal_zone2['SE_D21'] = SE_D21
 
     fractal_zone1 = {}
     fractal_zone1['D11'] = Dzone1_1
     fractal_zone1['D12'] = Dzone1_2
     fractal_zone1['k1'] = k1
-    fractal_zone1['r2_1'] = r2_1
-    fractal_zone1['mabs_error_1'] = mabs_error_1
+    fractal_zone1['R2_1'] = R2_1
+    fractal_zone1['SE_D11'] = SE_D11
+    fractal_zone1['SE_D12'] = SE_D12
 
     return fractal_zone1,fractal_zone2
 

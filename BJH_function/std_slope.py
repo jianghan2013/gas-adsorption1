@@ -5,8 +5,19 @@ import matplotlib.pyplot as plt
 import unittest
 import numpy.testing as npt
 
-#---------------------------------------
-def linear_fit(x_train,y_train,do_plot=True, fit_intercept = True):
+# class
+class get_linear_model():
+    def __init__(self,x_train,y_train):
+    # reshape the input
+        self.x_train =  np.array(x_train).reshape(-1,1)
+        self.y_train =  np.array(y_train).reshape(-1,1)
+
+    def linear_fit(self,do_plot=False, fit_intercept=True):
+        self.y_hat_train, self.coeffs ,self.regression_model = linear_fit(self.x_train,self.y_train,
+                                                          do_plot=do_plot, fit_intercept=fit_intercept)
+
+# ---- main function
+def linear_fit(x_train,y_train,do_plot=False, fit_intercept = True):
     '''
     to do the linear fit for the
     :param x_train(1D array): input x data
@@ -22,9 +33,7 @@ def linear_fit(x_train,y_train,do_plot=True, fit_intercept = True):
         coeffs['standard_error_slope'] = standard_error_slope
     '''
 
-    # reshape the input
-    x_train = np.array(x_train).reshape(-1,1)
-    y_train = np.array(y_train).reshape(-1,1)
+
 
     # initiate model  ; determine whether set intescept == 0 or not
     regression_model = linear_model.LinearRegression(fit_intercept= fit_intercept)
@@ -71,7 +80,7 @@ def linear_fit(x_train,y_train,do_plot=True, fit_intercept = True):
     coeffs['R2'] = R2
     coeffs['standard_error_slope'] = standard_error_slope
 
-    return y_hat_train,coeffs
+    return y_hat_train,coeffs,regression_model
 
 
 #--------unittesting-------------------------------------------------------
@@ -79,11 +88,14 @@ class testing(unittest.TestCase):
     def testing_all(self):
         x_train = [1, 2, 4, 5, 3, 2]
         y_train = [4, 3, 2, 4, 1, 4]
-        y_hat_train, coeffs = linear_fit(x_train, y_train, do_plot = False, fit_intercept=True)
-        npt.assert_almost_equal(coeffs['slope'],-0.184615385 , decimal=8)
-        npt.assert_almost_equal(coeffs['intercept'], 3.523076923, decimal=8)
-        npt.assert_almost_equal(coeffs['R2'], 0.0461538461538, decimal=8)
-        npt.assert_almost_equal(coeffs['standard_error_slope'], 0.419636359907, decimal=8)
+        # get the class
+        my_linear_model = get_linear_model(x_train,y_train)
+        # train the model
+        my_linear_model.linear_fit(do_plot = False, fit_intercept=True)
+        npt.assert_almost_equal(my_linear_model.coeffs['slope'],-0.184615385 , decimal=8)
+        npt.assert_almost_equal(my_linear_model.coeffs['intercept'], 3.523076923, decimal=8)
+        npt.assert_almost_equal(my_linear_model.coeffs['R2'], 0.0461538461538, decimal=8)
+        npt.assert_almost_equal(my_linear_model.coeffs['standard_error_slope'], 0.419636359907, decimal=8)
 
 if __name__ == '__main__':
     unittest.main()

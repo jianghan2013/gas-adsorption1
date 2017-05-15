@@ -76,10 +76,10 @@ params = {
    'xtick.labelsize': 20,
    'ytick.labelsize': 20,
    'text.usetex': False,
-   'figure.figsize': [16, 14],
+   'figure.figsize': [14, 18],
    }
 matplotlib.rcParams.update(params)
 
-#co2_plot.plot_psd_N2_CO2_per_core_in_one_figure(iso_N2,iso,core_names_select_1,sample_names_select_1,False)
+co2_plot.plot_psd_N2_CO2_per_core_in_one_figure(iso_N2,iso,core_names_select_1,sample_names_select_1,False)
 
 
